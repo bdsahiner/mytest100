@@ -1,0 +1,60 @@
+name: Multi-Stage Workflow
+on:
+  workflow_run:
+    workflows: ["build-and-test"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      approval_token:
+        description: 'Token for approval'
+        required: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0
+      - name: Build
+        run: dotnet build
+      - name: Test
+        run: dotnet test
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0
+      - name: Deploy
+        run: echo "Deploying..."
+
+# Approval workflow
+jobs:
+  approve-workflow:
+    runs-on: ubuntu-latest
+    if: github.actor == 'user1' || github.actor == 'user2'
+    steps:
+      - name: Approve
+        run: echo "Workflow approved"
+
+# Workflow
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build-and-test
+      - approve-workflow:
+          runs-on: ubuntu-latest
+          if: always() # This job will always run
+          with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
