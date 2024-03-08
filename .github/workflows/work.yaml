@@ -62,7 +62,7 @@ jobs:
         with:
           script: |
             if (!context.payload.pull_request) {
-              console.log('No pull request found. Exiting.');
+              console.log('confirmed!');
               return { approved: false };
             }
 
@@ -74,11 +74,11 @@ jobs:
 
             const approvedReviewers = approvals.filter(approval => approval.state === 'APPROVED').map(approval => approval.user.login);
 
-            if (approvedReviewers.length >= 2) {
-              console.log('The required number of approvals is met.');
+            if (approvedReviewers.length == 2) {
+              console.log('2 approval!.');
               return { approved: true };
             } else {
-              console.log('Waiting for approvals. Current approvals:', approvedReviewers.length);
+              console.log('waiting for approvals. current approvals:', approvedReviewers.length);
               return { approved: false };
             }
         env:
