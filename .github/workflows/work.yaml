@@ -53,37 +53,36 @@ jobs:
       - name: build
         run: dotnet build
 
- manual-approval:
-  runs-on: ubuntu-latest
-  needs: deploy
-  steps:
-    - name: Manual Approval
-      uses: actions/github-script@v4
-      with:
-        script: |
-          if (!context.payload.pull_request) {
-            console.log('No pull request found. Exiting.');
-            return { approved: false };
-          }
+  manual-approval:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Manual Approval
+        uses: actions/github-script@v4
+        with:
+          script: |
+            if (!context.payload.pull_request) {
+              console.log('No pull request found. Exiting.');
+              return { approved: false };
+            }
 
-          const { data: approvals } = await github.pulls.listReviews({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            pull_number: context.payload.pull_request.number
-          });
+            const { data: approvals } = await github.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
 
-          const approvedReviewers = approvals.filter(approval => approval.state === 'APPROVED').map(approval => approval.user.login);
+            const approvedReviewers = approvals.filter(approval => approval.state === 'APPROVED').map(approval => approval.user.login);
 
-          if (approvedReviewers.length >= 2) {
-            console.log('The required number of approvals is met.');
-            return { approved: true };
-          } else {
-            console.log('Waiting for approvals. Current approvals:', approvedReviewers.length);
-            return { approved: false };
-          }
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+            if (approvedReviewers.length >= 2) {
+              console.log('The required number of approvals is met.');
+              return { approved: true };
+            } else {
+              console.log('Waiting for approvals. Current approvals:', approvedReviewers.length);
+              return { approved: false };
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test_after_approval:
     runs-on: ubuntu-latest
